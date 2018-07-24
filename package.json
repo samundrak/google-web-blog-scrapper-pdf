@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "pdf:updates": "node index.js updates",
+    "pdf:fundamental": "node index.js fundamental"
   },
   "keywords": [],
   "author": "",

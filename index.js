@@ -4,10 +4,15 @@ const Thekdar = require('thekdar');
 const path = require('path');
 const ThekdarUi = require('thekdar-ui');
 
-const baseURL = 'https://developers.google.com/web/updates/2018';
+const scrap = process.argv[process.argv.length - 1] || 'fundamental';
+
+const baseURL =
+  scrap === 'fundamental'
+    ? 'https://developers.google.com/web/fundamentals/design-and-ux/ux-basics/'
+    : 'https://developers.google.com/web/updates/2018';
 const { events, Task } = Thekdar;
 
-const DOWNLOAD_LOCATION = path.join(__dirname, '/pdfs/updates');
+const DOWNLOAD_LOCATION = path.join(__dirname, `/pdfs/${scrap}`);
 const MAX_WORKER = 5;
 const MAX_TASK_PER_WORKER = 2;
 // Create new thekdar object
@@ -79,7 +84,7 @@ function dispatchTask(urls, totalContents) {
   const task = new Task();
   const itemToGen = urls.shift();
   if (!itemToGen) return;
-  task.setData({ item: itemToGen, total: totalContents });
+  task.setData({ item: itemToGen, total: totalContents, scrap });
   task.setType(Task.TYPE_FORK);
   thekdar.addTask(task, (err) => {
     console.log(`New Task for ${data.url} (${err ? 'ERROR' : 'SUCCESS'})`);
@@ -91,7 +96,7 @@ function dispatchTask(urls, totalContents) {
     console.log('Gathering information...');
     const page = await browser.newPage();
     const contents = await extractUrl(page);
-    // await createHeadPage(page, contents.urls);
+    await createHeadPage(page, contents.urls);
     browser.close();
     console.log(`Found ${contents.urls.length} items`);
     const urls = [].concat(contents.urls);

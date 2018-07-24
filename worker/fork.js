@@ -3,8 +3,7 @@ const path = require('path');
 const pup = require('puppeteer');
 
 const OVERWRITE_FILE = false;
-const DOWNLOAD_LOCATION = path.join(__dirname, '../pdfs/updates');
-
+let DOWNLOAD_LOCATION = path.join(__dirname, '../pdfs/fundamental');
 async function generatePdf(page, content) {
   const location = path.join(
     DOWNLOAD_LOCATION,
@@ -51,6 +50,7 @@ async function generatePdf(page, content) {
 }
 
 process.on('message', async (data) => {
+  DOWNLOAD_LOCATION = path.join(__dirname, `../pdfs/${data.task.data.scrap}`);
   if (data.type === 'task:add') {
     try {
       const item = data.task.data.item;
