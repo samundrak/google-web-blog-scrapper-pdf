@@ -1,0 +1,17 @@
+{
+  "name": "google-web-blog-scrapper-pdf",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "puppeteer": "^1.6.0-next.1532381444032",
+    "thekdar": "^1.0.6",
+    "thekdar-ui": "^0.1.7"
+  }
+}
