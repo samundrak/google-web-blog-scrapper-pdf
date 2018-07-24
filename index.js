@@ -1,11 +1,29 @@
 const pup = require('puppeteer');
 const fs = require('fs');
+const Thekdar = require('thekdar');
 const path = require('path');
+const ThekdarUi = require('thekdar-ui');
+
 const baseURL = 'https://developers.google.com/web/updates/2018';
+const { events, Task } = Thekdar;
 
-const OVERWRITE_FILE = false;
 const DOWNLOAD_LOCATION = path.join(__dirname, '/pdfs/updates');
+const MAX_WORKER = 5;
 
+// Create new thekdar object
+const thekdar = new Thekdar();
+
+// Path of script to be executed and type of worker
+thekdar.addWorkerAddress('./worker/fork.js', Task.TYPE_FORK);
+thekdar.setMaxWorker(MAX_WORKER);
+thekdar.setMaxTaskPerWorker(1);
+thekdar.deployWorkers();
+thekdar.addPluggin(
+  new ThekdarUi({
+    port: 9191,
+    pidUsage: false,
+  })
+);
 async function extractUrl(page) {
   await page.goto(baseURL);
   const bodyHandle = await page.$('body');
@@ -47,48 +65,24 @@ async function createHeadPage(page, contents) {
   });
 }
 
-async function generatePdf(page, content) {
-  const location = path.join(
-    DOWNLOAD_LOCATION,
-    `${(content.title || '').replace(/\/|\\/g, '-')}.pdf`
-  );
-  if (!OVERWRITE_FILE && fs.existsSync(location)) return;
-
-  const headerTemplate = `${new Date()} ${content.title} ${content.title} ${
-    content.index
-  } 12`;
-  await page.goto(content.url, { waitUntil: 'networkidle2' });
-  const bodyHandle = await page.$('body');
-  const body = await page.evaluate((body) => {
-    const cssLinks = Array.from(
-      body.querySelectorAll('link[rel=stylesheet]') || []
-    ).map((link) => link.outerHTML);
-    const styles = Array.from(document.querySelectorAll('style') || []).map(
-      (style) => style.outerHTML
-    );
-    const article = document.querySelector('article.devsite-article');
-    try {
-      article.querySelector('#gplus-comment-container').remove();
-      article.querySelector('.webFuRSSWidget').remove();
-    } catch (e) {
-      console.log(e);
+function handleThekdarMessage(urls, totalContents) {
+  return (message) => {
+    switch (message.type) {
+      case events.TASK_ERROR:
+      case events.TASK_COMPLETE:
+        dispatchTask(urls, totalContents);
+        break;
     }
-
-    const content = article.outerHTML;
-    body.innerHTML = '';
-    body.innerHTML = content;
-    return {
-      content,
-      cssLinks,
-      styles,
-    };
-  }, bodyHandle);
-
-  await page.pdf({
-    path: location,
-    format: 'A4',
-    headerTemplate,
-    footerTemplate: headerTemplate,
+  };
+}
+function dispatchTask(urls, totalContents) {
+  const task = new Task();
+  const itemToGen = urls.shift();
+  if (!itemToGen) return;
+  task.setData({ item: itemToGen, total: totalContents });
+  task.setType(Task.TYPE_FORK);
+  thekdar.addTask(task, (err) => {
+    console.log(`New Task for ${data.url} (${err ? 'ERROR' : 'SUCCESS'})`);
   });
 }
 (async () => {
@@ -100,23 +94,20 @@ async function generatePdf(page, content) {
     // await createHeadPage(page, contents.urls);
     browser.close();
     console.log(`Found ${contents.urls.length} items`);
-    for await (const item of contents.urls) {
-      const count = `${item.index} / ${contents.urls.length}`;
-      console.log(`(${count}) Scrapping ${item.url}`);
-      browser = await pup.launch();
-      const pyaaj = await browser.newPage();
-      console.log(`(${count}) Genertating PDF for  ${item.url}`);
+    const urls = [].concat(contents.urls);
+    const totalContents = urls.length;
 
-      await generatePdf(pyaaj, item);
-      console.log(`(${count}) Finished ${item.url}`);
-      await browser.close();
-    }
-    console.log(`Finished....`);
+    thekdar.on('message', handleThekdarMessage(urls, totalContents));
+    Array(MAX_WORKER)
+      .fill(true)
+      .forEach(() => {
+        dispatchTask(urls, totalContents);
+      });
   } catch (e) {
-    console.error(e);
     if (browser) {
       await browser.close();
     }
+    console.error(e);
     process.exit(0);
   }
 })();
