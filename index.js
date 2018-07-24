@@ -9,14 +9,14 @@ const { events, Task } = Thekdar;
 
 const DOWNLOAD_LOCATION = path.join(__dirname, '/pdfs/updates');
 const MAX_WORKER = 5;
-
+const MAX_TASK_PER_WORKER = 2;
 // Create new thekdar object
 const thekdar = new Thekdar();
 
 // Path of script to be executed and type of worker
 thekdar.addWorkerAddress('./worker/fork.js', Task.TYPE_FORK);
 thekdar.setMaxWorker(MAX_WORKER);
-thekdar.setMaxTaskPerWorker(1);
+thekdar.setMaxTaskPerWorker(MAX_TASK_PER_WORKER);
 thekdar.deployWorkers();
 thekdar.addPluggin(
   new ThekdarUi({
