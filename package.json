@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "pdf:updates": "node index.js updates",
-    "pdf:fundamental": "node index.js fundamental"
+    "pdf:fundamental": "node index.js fundamental",
+    "ebook:updates": "node ebook.js updates",
+    "ebook:fundamental": "node ebook.js fundamental"
   },
   "keywords": [],
   "author": "",
