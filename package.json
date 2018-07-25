@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "pdf:updates": "node index.js updates",
-    "pdf:fundamental": "node index.js fundamental",
+    "start": "node index.js",
+    "postinstall": "sudo apt-get install pdftk",
     "ebook:updates": "node ebook.js updates",
     "ebook:fundamental": "node ebook.js fundamental"
   },
@@ -13,8 +13,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "inquirer": "^6.0.0",
+    "inquirer_config_builder": "^1.0.0",
     "puppeteer": "^1.6.0-next.1532381444032",
     "thekdar": "^1.0.6",
-    "thekdar-ui": "^0.1.7"
+    "thekdar-ui": "^0.1.7",
+    "yargs": "^12.0.1"
   }
 }

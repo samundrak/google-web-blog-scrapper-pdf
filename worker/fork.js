@@ -19,9 +19,9 @@ async function generatePdf(page, content) {
   const body = await page.evaluate((body) => {
     const cssLinks = Array.from(
       body.querySelectorAll('link[rel=stylesheet]') || []
-    ).map((link) => link.outerHTML);
+    ).map((link) => (link || {}).outerHTML);
     const styles = Array.from(document.querySelectorAll('style') || []).map(
-      (style) => style.outerHTML
+      (style) => (style || {}).outerHTML
     );
     const article = document.querySelector('article.devsite-article');
     try {
@@ -31,7 +31,7 @@ async function generatePdf(page, content) {
       console.log(e);
     }
 
-    const content = article.outerHTML;
+    const content = (article || {}).outerHTML;
     body.innerHTML = '';
     body.innerHTML = content;
     return {
@@ -50,7 +50,10 @@ async function generatePdf(page, content) {
 }
 
 process.on('message', async (data) => {
-  DOWNLOAD_LOCATION = path.join(__dirname, `../pdfs/${data.task.data.scrap}`);
+  DOWNLOAD_LOCATION = path.join(
+    __dirname,
+    `../pdfs/${data.task.data.collection}`
+  );
   if (data.type === 'task:add') {
     try {
       const item = data.task.data.item;
