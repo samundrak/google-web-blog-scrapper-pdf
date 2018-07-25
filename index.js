@@ -1,7 +1,7 @@
-const yargs = require('yargs');
 const inquirer = require('inquirer');
 const InquirerConfigBuilder = require('inquirer_config_builder');
 const pdfs = require('./pdfs');
+const ebook = require('./ebook');
 
 const urlMap = {
   updates: 'https://developers.google.com/web/updates/2018',
@@ -15,7 +15,6 @@ const urlMap = {
   ['tools:workbox']:
     'https://developers.google.com/web/tools/workbox/guides/get-started',
 };
-const argv = yargs.argv;
 
 (async () => {
   const schema = {
@@ -41,7 +40,14 @@ const argv = yargs.argv;
         default: false,
       },
     },
-    ebook: {},
+    ebook: {
+      collection: {
+        message: 'Select collection of article to generate ebook',
+        type: 'list',
+        required: true,
+        choices: Object.keys(urlMap),
+      },
+    },
   };
   let questionReadyObject = InquirerConfigBuilder.questions(schema.init);
   let answers = await inquirer.prompt(questionReadyObject);
@@ -52,7 +58,10 @@ const argv = yargs.argv;
       questionReadyObject = InquirerConfigBuilder.questions(schema.ebook);
       answers = await inquirer.prompt(questionReadyObject);
       configReadyObject = InquirerConfigBuilder.create(answers);
-
+      ebook({
+        urlMap,
+        ...configReadyObject,
+      });
       break;
     default:
       questionReadyObject = InquirerConfigBuilder.questions(schema.pdfs);
